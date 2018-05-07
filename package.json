@@ -28,6 +28,6 @@
     "@types/react-dom": "^16.0.5",
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
-    "sdb-ts": "file:///home/soney/code/sdb-ts"
+    "sdb-ts": "file:../sdb-ts"
   }
 }
