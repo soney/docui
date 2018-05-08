@@ -1,9 +1,10 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Hello } from "./components/Hello";
+import { CodeEditor } from "./components/CodeEditor";
+require('codemirror/mode/javascript/javascript');
 
 ReactDOM.render(
-    <Hello compiler="TypeScript" framework="React" />,
+    <CodeEditor options={{mode:'text/typescript'}} />,
     document.getElementById("example")
 );
