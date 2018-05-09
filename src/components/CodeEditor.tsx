@@ -25,7 +25,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
     private doc:SDBDoc<CodeDoc> = this.client.get<CodeDoc>('example', 'counter');
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
-    private ops:({p:number,d:string}|{p:number,i:string})[] = [];
+    private ops:({p:(number|string)[],si?:string, sd?:string})[] = [];
     private static defaultProps:CodeEditorProps = {
         name: '',
         value: '',
@@ -46,21 +46,28 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.codeMirror.setValue(this.props.value);
         this.codeMirror.on('beforeChange', this.beforeLocalChange);
         this.codeMirror.on('changes', this.afterLocalChanges);
+
+        window['cm'] = this.codeMirror;
     };
-    private beforeLocalChange = (editor:CodeMirror.Editor, change:CodeMirror.EditorChange):void => {
-        if(this.suppressChange) { return ; }
+    private beforeLocalChange = async (editor:CodeMirror.Editor, change:CodeMirror.EditorChange):Promise<void> => {
+        if(this.suppressChange) { return; }
+        const ops = this.getOps(change);
+        this.ops.push(...ops);
+    };
+    private getOps(change:CodeMirror.EditorChange):{p:(string|number)[], si?:string, sd?:string}[] {
+        const doc:CodeMirror.Doc = this.codeMirror.getDoc();
         const {from, to} = change;
+        const p:(string|number)[] = this.props.key.concat(doc.indexFromPos(from));
+        const ops:{p:(string|number)[], si?:string, sd?:string}[] = [];
 
-        const doc:CodeMirror.Doc = editor.getDoc();
-        console.log(change);
-
-        const index:number = doc.indexFromPos(from);
         if(!CodeEditor.positionEq(from, to)) { // delete
-            this.ops.push({p:index, d:doc.getRange(from, to)})
+            ops.push({p, sd:doc.getRange(from, to)})
         }
-        if(change.text[0] !== '' && change.text.length > 0) { // insert
-            this.ops.push({p: index, i: change.text.join('\n')});
+
+        if(change.text[0] !== '' || change.text.length > 0) { // insert
+            ops.push({p, si:change.text.join((this.codeMirror as any).lineSeparator())});
         }
+        return ops;
     };
     private static positionEq(a:CodeMirror.Position, b:CodeMirror.Position):boolean {
         return a.ch===b.ch && a.line===b.line;
@@ -68,41 +75,46 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
     private afterLocalChanges = async (editor:CodeMirror.Editor, changes:CodeMirror.EditorChange[]):Promise<void> => {
         if(this.suppressChange) { return ; }
         if(this.ops.length > 0) {
-            const op = [{p:this.props.key, t:'text0', o:this.ops}];
+            const ops = this.ops;
             this.ops = [];
-            await this.doc.submitOp(op);
+            await this.doc.submitOp(ops);
+            this.assertValue();
         }
     };
+    private static arrEq(a:any[], b:any[]):boolean {
+        if(a.length === b.length) {
+            for(let i = 0; i<a.length; i++) {
+                if(a[i] !== b[i]) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
     private onRemoteChange = (ops:any[], source:boolean):void => {
         if(source) { return; }
         this.suppressChange = true;
-        console.log(ops);
         if(ops) {
             ops.forEach((part) => {
-                if (!(part.p && part.p.length === 1 && part.p[0] === this.props.key && part.t === 'text0')) {
+                if (!(part.p && CodeEditor.arrEq(part.p.slice(0, this.props.key.length), this.props.key) && (part.si||part.sd))) {
                     console.log('ShareDBCodeMirror: ignoring op because of path or type:', part);
                     return;
                 }
 
                 const op = part.o;
                 const doc = this.codeMirror.getDoc();
-                if (op.length === 2 && op[0].d && op[1].i && op[0].p === op[1].p) {
-                    // replace operation
-                    const from = doc.posFromIndex(op[0].p);
-                    const to = doc.posFromIndex(op[0].p + op[0].d.length);
-                    doc.replaceRange(op[1].i, from, to);
-                } else {
-                    op.forEach((part) => {
-                        const from = doc.posFromIndex(part.p);
-                        if (part.d) {
-                            // delete operation
-                            const to = doc.posFromIndex(part.p + part.d.length);
-                            doc.replaceRange('', from, to);
-                        } else if (part.i) {
-                            // insert operation
-                            doc.replaceRange(part.i, from);
-                        }
-                    });
+                const {si, sd} = part;
+
+                const index = part.p[part.p.length-1];
+                const from = doc.posFromIndex(index);
+
+                if(sd) {
+                    const to = doc.posFromIndex(index+sd.length);
+                    doc.replaceRange('', from, to);
+                } else if(si) {
+                    doc.replaceRange(si, from);
                 }
             });
         } else {
