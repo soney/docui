@@ -52,14 +52,18 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         const {from, to} = change;
 
         const doc:CodeMirror.Doc = editor.getDoc();
+        console.log(change);
 
         const index:number = doc.indexFromPos(from);
-        if(from !== to) { // delete
+        if(!CodeEditor.positionEq(from, to)) { // delete
             this.ops.push({p:index, d:doc.getRange(from, to)})
         }
         if(change.text[0] !== '' && change.text.length > 0) { // insert
             this.ops.push({p: index, i: change.text.join('\n')});
         }
+    };
+    private static positionEq(a:CodeMirror.Position, b:CodeMirror.Position):boolean {
+        return a.ch===b.ch && a.line===b.line;
     };
     private afterLocalChanges = async (editor:CodeMirror.Editor, changes:CodeMirror.EditorChange[]):Promise<void> => {
         if(this.suppressChange) { return ; }
