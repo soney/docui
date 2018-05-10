@@ -1,0 +1,1 @@
+/// <reference path="quill.d.ts" />

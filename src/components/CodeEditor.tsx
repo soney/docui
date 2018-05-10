@@ -22,7 +22,7 @@ interface CodeEditorState {
 export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState> {
     private textareaNode:HTMLTextAreaElement;
     private client:SDBClient = new SDBClient(new WebSocket(`ws://${window.location.host}`));
-    private doc:SDBDoc<CodeDoc> = this.client.get<CodeDoc>('example', 'counter');
+    private doc:SDBDoc<CodeDoc> = this.client.get<CodeDoc>('example', 'code');
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
     private ops:({p:(number|string)[],si?:string, sd?:string})[] = [];
