@@ -7,7 +7,7 @@ require('codemirror/mode/javascript/javascript');
 
 ReactDOM.render(
     <div>
-        <CodeEditor options={{mode:'text/typescript'}} />
+        {/* <CodeEditor options={{mode:'text/typescript'}} /> */}
         <QuillEditor />
     </div>,
     document.getElementById("example")

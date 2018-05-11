@@ -7,7 +7,7 @@ import * as richText from 'rich-text';
 
 SDBClient.registerType(richText.type);
 
-require('quill/dist/quill.core.css');
+// require('quill/dist/quill.core.css');
 require('quill/dist/quill.snow.css');
 
 interface QuillEditorProps {
@@ -39,7 +39,10 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
 
         options: {
             placeholder: 'write something...',
-            theme: 'snow'
+            theme: 'snow',
+            modules: {
+                toolbar: ['bold', 'italic', 'underline', 'strike']
+            }
         }
     };
     constructor(props:QuillEditorProps, state:QuillEditorState) {
@@ -62,7 +65,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     };
 
     public componentDidMount():void {
-        this.quill = new Quill(this.editorNode);
+        this.quill = new Quill(this.editorNode, this.props.options);
         this.quill.on('text-change', (delta, oldDelta, source) => {
             if (source !== 'user') { return; }
             this.doc.submitOp(delta, this.quill);
