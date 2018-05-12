@@ -29,5 +29,3 @@ export class DocUIBlot extends Parchment.Inline {
         return formats;
     };
 };
-
-Parchment.register(DocUIBlot);

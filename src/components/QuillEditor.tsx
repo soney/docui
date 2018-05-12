@@ -4,11 +4,16 @@ import * as classNames from 'classnames';
 import {SDBClient, SDBDoc} from 'sdb-ts';
 import {QuillDoc} from '../../types/docTypes';
 import * as richText from 'rich-text';
+import Parchment from 'parchment';
+import {DocUIBlot} from '../blots/docuiblot';
+import * as _ from 'lodash';
 
 SDBClient.registerType(richText.type);
+Parchment.register(DocUIBlot);
 
 // require('quill/dist/quill.core.css');
 require('quill/dist/quill.snow.css');
+
 
 interface QuillEditorProps {
     name?: string,
@@ -29,6 +34,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
     private editorNode:HTMLDivElement;
+    private toolbarNode:HTMLDivElement;
     private quill:Quill;
     private static defaultProps:QuillEditorProps = {
         name: '',
@@ -41,7 +47,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
             placeholder: 'write something...',
             theme: 'snow',
             modules: {
-                toolbar: ['bold', 'italic', 'underline', 'strike']
+                // toolbar: (():HTMLElement => this.toolbarNode
             }
         }
     };
@@ -65,7 +71,11 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     };
 
     public componentDidMount():void {
-        this.quill = new Quill(this.editorNode, this.props.options);
+        this.quill = new Quill(this.editorNode, _.merge({}, this.props.options, {
+            modules: {
+                toolbar: this.toolbarNode
+            }
+        }));
         this.quill.on('text-change', (delta, oldDelta, source) => {
             if (source !== 'user') { return; }
             this.doc.submitOp(delta, this.quill);
@@ -78,7 +88,19 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
 
     public render():React.ReactNode {
         const editorClassName = classNames(this.props.className);
-        return <div ref={(ref:HTMLDivElement) => this.editorNode = ref } className={editorClassName}>
+        return <div>
+            <div ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">
+                <select className="ql-size">
+                    <option value="small"></option>
+                    <option selected></option>
+                    <option value="large"></option>
+                    <option value="huge"></option>
+                </select>
+                <button className="ql-bold"></button>
+                <button className="ql-script" value="sub"></button>
+                <button className="ql-script" value="super"></button>
+            </div>
+            <div ref={(ref:HTMLDivElement) => this.editorNode = ref } className={editorClassName} />
         </div>
     };
 };
