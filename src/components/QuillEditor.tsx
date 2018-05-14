@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 
 SDBClient.registerType(richText.type);
 Parchment.register(DocUIBlot);
+console.log(DocUIBlot);
 
 // require('quill/dist/quill.core.css');
 require('quill/dist/quill.snow.css');
@@ -90,8 +91,8 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private onButtonClick = ():void => {
         const range = this.quill.getSelection();
         if(range) {
-            // this.quill.
-            this.quill.format('link', '', Quill.sources.USER);
+            this.quill.format('link2', 'http://www.google.com/', Quill.sources.USER);
+            console.log('formatted');
         }
         console.log(range);
     };
