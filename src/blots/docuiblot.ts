@@ -28,4 +28,4 @@ export class DocUIBlot extends Parchment.Inline {
         formats['link'] = DocUIBlot.formats(this.domNode);
         return formats;
     };
-};
+}; 

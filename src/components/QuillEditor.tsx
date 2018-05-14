@@ -35,6 +35,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private suppressChange:boolean = false;
     private editorNode:HTMLDivElement;
     private toolbarNode:HTMLDivElement;
+    private buttonNode:HTMLButtonElement;
     private quill:Quill;
     private static defaultProps:QuillEditorProps = {
         name: '',
@@ -86,6 +87,15 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         }
     };
 
+    private onButtonClick = ():void => {
+        const range = this.quill.getSelection();
+        if(range) {
+            // this.quill.
+            this.quill.format('link', '', Quill.sources.USER);
+        }
+        console.log(range);
+    };
+
     public render():React.ReactNode {
         const editorClassName = classNames(this.props.className);
         return <div>
@@ -99,6 +109,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
                 <button className="ql-bold"></button>
                 <button className="ql-script" value="sub"></button>
                 <button className="ql-script" value="super"></button>
+                <button className="" onClick={(e)=>this.onButtonClick()} ref={(ref:HTMLButtonElement)=>this.buttonNode = ref}>x</button>
             </div>
             <div ref={(ref:HTMLDivElement) => this.editorNode = ref } className={editorClassName} />
         </div>

@@ -46,8 +46,6 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.codeMirror.setValue(this.props.value);
         this.codeMirror.on('beforeChange', this.beforeLocalChange);
         this.codeMirror.on('changes', this.afterLocalChanges);
-
-        window['cm'] = this.codeMirror;
     };
     private beforeLocalChange = async (editor:CodeMirror.Editor, change:CodeMirror.EditorChange):Promise<void> => {
         if(this.suppressChange) { return; }
