@@ -9,8 +9,7 @@ import {DocUIBlot} from '../blots/docuiblot';
 import * as _ from 'lodash';
 
 SDBClient.registerType(richText.type);
-Parchment.register(DocUIBlot);
-console.log(DocUIBlot);
+Quill.register('formats/link2', DocUIBlot);
 
 // require('quill/dist/quill.core.css');
 require('quill/dist/quill.snow.css');
@@ -91,10 +90,8 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private onButtonClick = ():void => {
         const range = this.quill.getSelection();
         if(range) {
-            this.quill.format('link2', 'http://www.google.com/', Quill.sources.USER);
-            console.log('formatted');
+            this.quill.formatText(range.index, range.length, {link2: 'http://www.google.com/'}, Quill.sources.USER);
         }
-        console.log(range);
     };
 
     public render():React.ReactNode {
