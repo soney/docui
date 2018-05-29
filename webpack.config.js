@@ -31,6 +31,7 @@ module.exports = {
         "react": "React",
         "react-dom": "ReactDOM",
         "sdb-ts": "SDB",
-        "quill": "Quill"
+        "quill": "Quill",
+        "codemirror": "CodeMirror"
     },
 };

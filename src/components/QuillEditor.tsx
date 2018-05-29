@@ -4,12 +4,11 @@ import * as classNames from 'classnames';
 import {SDBClient, SDBDoc} from 'sdb-ts';
 import {QuillDoc} from '../../types/docTypes';
 import * as richText from 'rich-text';
-import Parchment from 'parchment';
-import {DocUIBlot} from '../blots/docuiblot';
+import {DocUIInlineBlot} from '../blots/docuiblot';
 import * as _ from 'lodash';
 
 SDBClient.registerType(richText.type);
-Quill.register('formats/link2', DocUIBlot);
+Quill.register(DocUIInlineBlot);
 
 // let Block = Quill.import('blots/block');
 // Block.allowedChildren.push(DocUIBlot);
@@ -92,7 +91,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private onButtonClick = ():void => {
         const range = this.quill.getSelection();
         if(range) {
-            this.quill.formatText(range.index, range.length, {link2: 'http://www.google.com/'}, Quill.sources.USER);
+            this.quill.formatText(range.index, range.length, {'docui-inline': 'http://umich.edu/'}, Quill.sources.USER);
         }
     };
 
