@@ -1,3 +1,5 @@
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import * as Quill from 'quill';
 
 const Inline = Quill.import('blots/inline');
@@ -17,3 +19,14 @@ export class DocUIInlineBlot extends Inline {
         return domNode.getAttribute('href') || true;
     };
 }; 
+
+
+
+
+// ReactDOM.render(
+//     <div>
+//         <CodeEditor options={{mode:'text/typescript-jsx'}} />
+//         <QuillEditor />
+//     </div>,
+//     document.getElementById("example")
+// );

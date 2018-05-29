@@ -84,6 +84,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         });
         const data = this.doc.getData();
         if(data) {
+            console.log(data);
             this.quill.setContents(data);
         }
     };
