@@ -11,9 +11,11 @@ import * as _ from 'lodash';
 SDBClient.registerType(richText.type);
 Quill.register('formats/link2', DocUIBlot);
 
-// require('quill/dist/quill.core.css');
-require('quill/dist/quill.snow.css');
+// let Block = Quill.import('blots/block');
+// Block.allowedChildren.push(DocUIBlot);
 
+require('quill/dist/quill.core.css');
+require('quill/dist/quill.snow.css');
 
 interface QuillEditorProps {
     name?: string,

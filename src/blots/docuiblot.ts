@@ -1,14 +1,14 @@
 import Parchment from 'parchment';
 
 export class DocUIBlot extends Parchment.Inline {
-    public static blotName:string = 'link2';
-    public static tagName:string = 'A';
+    public static blotName:string = 'link';
+    public static tagName:string = 'B';
     public static create(url:string):Node {
         console.log(url);
         const node:Element = super.create(null) as Element;
-        node.setAttribute('href', url);
-        node.setAttribute('target', '_blank');
-        node.setAttribute('title', node.textContent);
+        // node.setAttribute('href', url);
+        // node.setAttribute('target', '_blank');
+        // node.setAttribute('title', node.textContent);
         return node;
     };
 
@@ -18,7 +18,7 @@ export class DocUIBlot extends Parchment.Inline {
 
     public format(name:string, value:any):void {
         console.log(name, value);
-        if(name === 'link2' && value) {
+        if(name === 'link' && value) {
             this.domNode.setAttribute('href', value);
         } else {
             super.format(name, value);
@@ -27,7 +27,7 @@ export class DocUIBlot extends Parchment.Inline {
 
     public formats():{[index:string]: any} {
         const formats = super.formats();
-        formats['link2'] = DocUIBlot.formats(this.domNode);
+        formats['link'] = DocUIBlot.formats(this.domNode);
         return formats;
     };
 }; 
