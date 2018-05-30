@@ -4,7 +4,7 @@ import * as classNames from 'classnames';
 import {SDBClient, SDBDoc} from 'sdb-ts';
 import {QuillDoc} from '../../types/docTypes';
 import * as richText from 'rich-text';
-import {DocUIInlineBlot} from '../blots/docuiblot';
+import {DocUIInlineBlot} from '../blots/DocUIInlineBlot';
 import * as _ from 'lodash';
 
 SDBClient.registerType(richText.type);
