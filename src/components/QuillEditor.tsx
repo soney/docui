@@ -84,7 +84,6 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         });
         const data = this.doc.getData();
         if(data) {
-            console.log(data);
             this.quill.setContents(data);
         }
     };
@@ -92,7 +91,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     private onButtonClick = ():void => {
         const range = this.quill.getSelection();
         if(range) {
-            this.quill.formatText(range.index, range.length, {'docui-inline': 'http://umich.edu/'}, Quill.sources.USER);
+            this.quill.formatText(range.index, range.length, {'docui-inline': {url: 'http://umich.edu/'}}, Quill.sources.USER);
         }
     };
 
