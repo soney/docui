@@ -13,7 +13,8 @@ interface CodeEditorProps {
     className?: string,
     mode?: string,
     options?: any,
-    key?:Array<string|number>
+    key?:Array<string|number>,
+    doc: [string, string]
 };
 interface CodeEditorState {
     isFocused: boolean
@@ -22,7 +23,7 @@ interface CodeEditorState {
 export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState> {
     private textareaNode:HTMLTextAreaElement;
     private client:SDBClient = new SDBClient(new WebSocket(`ws://${window.location.host}`));
-    private doc:SDBDoc<CodeDoc> = this.client.get<CodeDoc>('example', 'code');
+    private doc:SDBDoc<CodeDoc>;
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
     private ops:({p:(number|string)[],si?:string, sd?:string})[] = [];
@@ -32,10 +33,13 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         className: '',
         autoFocus: false,
         key: ['code'],
-        options: {}
+        options: {},
+        doc: ['example', 'code']
     };
     constructor(props:CodeEditorProps, state:CodeEditorState) {
         super(props, state);
+        const [n, d] = this.props.doc;
+        this.doc = this.client.get<CodeDoc>(n, d);
         this.state = {
             isFocused: false
         };

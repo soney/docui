@@ -7,7 +7,8 @@ require('codemirror/mode/javascript/javascript');
 
 ReactDOM.render(
     <div>
-        <CodeEditor options={{mode:'text/typescript-jsx'}} />
+        <CodeEditor doc={['example', 'backend-code']} options={{mode:'text/typescript-jsx'}} />
+        <CodeEditor doc={['example', 'display-code']} options={{mode:'text/typescript-jsx'}} />
         <QuillEditor />
     </div>,
     document.getElementById("example")
