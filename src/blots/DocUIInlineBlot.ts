@@ -21,7 +21,7 @@ export class DocUIInlineBlot extends Inline {
     private onRemoteChange = (ops:any[], source:any):void => {
         const data = this.doc.getData();
         const domNode:Node = this['domNode'];
-        // domNode.textContent = data.state.x || 'hello';
+        domNode.textContent = data.state.x || 'hello';
     };
 
     public static create(info:any):Node {
