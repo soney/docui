@@ -16,12 +16,14 @@ export class DocUIInlineBlot extends Inline {
         super(domNode, value);
         this.doc = DocUIInlineBlot.client.get<StateDoc>('example', 'state');
         this.doc.subscribe(this.onRemoteChange);
+        console.log(this.doc);
     };
 
     private onRemoteChange = (ops:any[], source:any):void => {
         const data = this.doc.getData();
         const domNode:Node = this['domNode'];
         domNode.textContent = data.state.x || 'hello';
+        console.log(data.state);
     };
 
     public static create(info:any):Node {
