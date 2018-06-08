@@ -39,6 +39,6 @@
     "react": "^16.3.2",
     "react-dom": "^16.3.2",
     "rich-text": "^3.1.0",
-    "sdb-ts": "git@github.com:soney/sdb-ts.git"
+    "sdb-ts": "https://github.com/soney/sdb-ts.git"
   }
 }
