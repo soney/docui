@@ -2,10 +2,11 @@ import * as Quill from 'quill';
 import * as React from "react";
 import * as classNames from 'classnames';
 import {SDBClient, SDBDoc} from 'sdb-ts';
-import {QuillDoc} from '../../types/docTypes';
+import {QuillDoc, FormatDoc, DocUIFormat} from '../../types/docTypes';
 import * as richText from 'rich-text';
 import {DocUIInlineBlot} from '../blots/DocUIInlineBlot';
-import * as _ from 'lodash';
+import {merge} from 'lodash';
+import {FormatEditor} from './FormatEditor';
 
 SDBClient.registerType(richText.type);
 Quill.register(DocUIInlineBlot);
@@ -26,12 +27,15 @@ interface QuillEditorProps {
     key?:Array<string|number>
 };
 interface QuillEditorState {
-    isFocused: boolean
+    isFocused: boolean,
+    formats:DocUIFormat[],
+    editingFormat:DocUIFormat
 };
 
 export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorState> {
     private client:SDBClient = new SDBClient(new WebSocket(`ws://${window.location.host}`));
-    private doc:SDBDoc<QuillDoc> = this.client.get<QuillDoc>('example', 'quill');
+    private doc:SDBDoc<QuillDoc> = this.client.get<QuillDoc>('docs', 'example');
+    private formatsDoc:SDBDoc<FormatDoc> = this.client.get<FormatDoc>('docui', 'formats');
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
     private editorNode:HTMLDivElement;
@@ -56,9 +60,17 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     constructor(props:QuillEditorProps, state:QuillEditorState) {
         super(props, state);
         this.state = {
-            isFocused: false
+            isFocused: false,
+            formats: [],
+            editingFormat: null
         };
         this.doc.subscribe(this.onRemoteChange);
+        this.formatsDoc.subscribe(this.onFormatsChange);
+    };
+
+    private onFormatsChange = (type:string, ops:any[], source:any):void => {
+        const {formats} = this.formatsDoc.getData();
+        this.setState({formats});
     };
 
     private onRemoteChange = (type:string, ops:any[], source:any):void => {
@@ -73,7 +85,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     };
 
     public componentDidMount():void {
-        this.quill = new Quill(this.editorNode, _.merge({}, this.props.options, {
+        this.quill = new Quill(this.editorNode, merge({}, this.props.options, {
             modules: {
                 toolbar: this.toolbarNode
             }
@@ -95,8 +107,39 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         }
     };
 
+    private createFormat():void {
+        this.formatsDoc.submitListPushOp(['formats'], {
+            name: `F${this.formatsDoc.getData().formats.length}`,
+            backendCode: {
+                code: 'backend'
+            },
+            displayCode: {
+                code: 'frontend'
+            }
+        });
+    };
+    private editFormat(format:DocUIFormat):void {
+        const editingFormat = this.state.editingFormat;
+        if(editingFormat === format) {
+            this.setState({editingFormat: null});
+        } else {
+            this.setState({editingFormat: format});
+        }
+    };
+
+    private applyFormat(format:DocUIFormat):void {
+        console.log('apply', format);
+    };
+
     public render():React.ReactNode {
         const editorClassName = classNames(this.props.className);
+        const formatsElements:React.ReactNode[] = this.state.formats.map((f:DocUIFormat) =>
+            <button onClick={(e)=>this.applyFormat(f)} onContextMenu={(e)=>{e.preventDefault(); this.editFormat(f)}} key={f.name}>{f.name}</button>
+        );
+        let editingFormatElement = null;
+        if(this.state.editingFormat) {
+            editingFormatElement = <FormatEditor id={this.state.formats.indexOf(this.state.editingFormat)} formatsDoc={this.formatsDoc} format={this.state.editingFormat} />;
+        }
         return <div>
             <div ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">
                 <select className="ql-size">
@@ -108,8 +151,13 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
                 <button className="ql-bold"></button>
                 <button className="ql-script" value="sub"></button>
                 <button className="ql-script" value="super"></button>
-                <button className="" onClick={(e)=>this.onButtonClick()} ref={(ref:HTMLButtonElement)=>this.buttonNode = ref}>x</button>
+
+                {formatsElements}
+
+                <button className="" onClick={(e)=>this.createFormat()}>Create</button>
+                {/* <button className="" onClick={(e)=>this.onButtonClick()} ref={(ref:HTMLButtonElement)=>this.buttonNode = ref}>x</button> */}
             </div>
+            {editingFormatElement}
             <div ref={(ref:HTMLDivElement) => this.editorNode = ref } className={editorClassName} />
         </div>
     };

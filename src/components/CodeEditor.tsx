@@ -2,7 +2,7 @@ import * as React from "react";
 import {SDBClient, SDBDoc} from 'sdb-ts';
 import * as CodeMirror from 'codemirror';
 import * as classNames from 'classnames';
-import {CodeDoc} from '../../types/docTypes';
+import {FormatDoc, CodeDoc} from '../../types/docTypes';
 
 require('codemirror/lib/codemirror.css');
 
@@ -13,8 +13,9 @@ interface CodeEditorProps {
     className?: string,
     mode?: string,
     options?: any,
-    key?:Array<string|number>,
-    doc: [string, string]
+    docPath:Array<string|number>,
+    doc:SDBDoc<any>
+    // doc: [string, string]
 };
 interface CodeEditorState {
     isFocused: boolean
@@ -23,7 +24,7 @@ interface CodeEditorState {
 export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState> {
     private textareaNode:HTMLTextAreaElement;
     private client:SDBClient = new SDBClient(new WebSocket(`ws://${window.location.host}`));
-    private doc:SDBDoc<CodeDoc>;
+    private doc:SDBDoc<any>;
     private codeMirror:CodeMirror.Editor;
     private suppressChange:boolean = false;
     private ops:({p:(number|string)[],si?:string, sd?:string})[] = [];
@@ -32,14 +33,15 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         value: '',
         className: '',
         autoFocus: false,
-        key: ['code'],
+        docPath: [],
         options: {},
-        doc: ['example', 'code']
+        doc:null
+        // doc: ['example', 'code']
     };
     constructor(props:CodeEditorProps, state:CodeEditorState) {
         super(props, state);
-        const [n, d] = this.props.doc;
-        this.doc = this.client.get<CodeDoc>(n, d);
+        // const [n, d] = this.props.doc;
+        // this.doc = this.client.get<CodeDoc>(n, d);
         this.state = {
             isFocused: false
         };
@@ -59,7 +61,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
     private getOps(change:CodeMirror.EditorChange):{p:(string|number)[], si?:string, sd?:string}[] {
         const doc:CodeMirror.Doc = this.codeMirror.getDoc();
         const {from, to} = change;
-        const p:(string|number)[] = this.props.key.concat(doc.indexFromPos(from));
+        const p:(string|number)[] = this.props.docPath.concat(doc.indexFromPos(from));
         const ops:{p:(string|number)[], si?:string, sd?:string}[] = [];
 
         if(!CodeEditor.positionEq(from, to)) { // delete
@@ -100,7 +102,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.suppressChange = true;
         if(ops) {
             ops.forEach((part) => {
-                if (!(part.p && CodeEditor.arrEq(part.p.slice(0, this.props.key.length), this.props.key) && (part.si||part.sd))) {
+                if (!(part.p && CodeEditor.arrEq(part.p.slice(0, this.props.docPath.length), this.props.docPath) && (part.si||part.sd))) {
                     console.log('ShareDBCodeMirror: ignoring op because of path or type:', part);
                     return;
                 }
@@ -120,12 +122,22 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
                 }
             });
         } else {
-            this.codeMirror.getDoc().setValue(this.doc.getData().code);
+            this.codeMirror.getDoc().setValue(this.getSDBCode());
         }
         this.suppressChange = false;
     };
+    private getSDBCode():string {
+        const docData = this.doc.getData();
+        let docValue = docData;
+        for(let i:number = 0; i<this.props.docPath.length; i++) {
+            const k = this.props.docPath[i];
+            docValue = docValue[k];
+        }
+        return docValue;
+    };
     private assertValue():void {
-        const docValue = this.doc.getData().code;
+        const docValue = this.getSDBCode();
+
         const editorValue = this.codeMirror.getValue();
         if(docValue !== editorValue) {
             console.error('ShareDBCodeMirror: value in CodeMirror does not match expected value:', '\n\nExpected value:\n', docValue, '\n\nEditor value:\n', editorValue);

@@ -9,3 +9,12 @@ export type QuillDoc = any[];
 export type StateDoc = {
     state: any
 };
+
+export interface DocUIFormat {
+    name:string,
+    backendCode:BackendCodeDoc,
+    displayCode:DisplayCodeDoc
+};
+export interface FormatDoc {
+    formats: DocUIFormat[]
+};
