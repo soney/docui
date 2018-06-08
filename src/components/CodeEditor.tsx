@@ -95,7 +95,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
             return false;
         }
     }
-    private onRemoteChange = (ops:any[], source:boolean):void => {
+    private onRemoteChange = (type:string, ops:any[], source:boolean):void => {
         if(source) { return; }
         this.suppressChange = true;
         if(ops) {

@@ -61,7 +61,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         this.doc.subscribe(this.onRemoteChange);
     };
 
-    private onRemoteChange = (ops:any[], source:any):void => {
+    private onRemoteChange = (type:string, ops:any[], source:any):void => {
         if(this.quill) {
             if (source === this.quill) { return; }
             if(ops) {

@@ -6,6 +6,28 @@ import {SDBClient, SDBDoc} from 'sdb-ts';
 
 const Inline = Quill.import('blots/inline');
 
+const codestr = `
+"use strict";
+exports.__esModule = true;
+var WidgetDisplay = /** @class */ (function () {
+    function WidgetDisplay(displayBackend) {
+        this.displayBackend = displayBackend;
+    }
+    ;
+    WidgetDisplay.prototype.render = function () {
+        var abc = this.displayBackend.getState('abc');
+        var greeting = 'hello';
+        return React.createElement("div", null,
+            greeting,
+            " ",
+            abc);
+    };
+    ;
+    return WidgetDisplay;
+}());
+exports["default"] = WidgetDisplay;
+; `;
+
 export class DocUIInlineBlot extends Inline {
     private static client:SDBClient = new SDBClient(new WebSocket(`ws://${window.location.host}`));
     private doc:SDBDoc<StateDoc>;
@@ -16,14 +38,15 @@ export class DocUIInlineBlot extends Inline {
         super(domNode, value);
         this.doc = DocUIInlineBlot.client.get<StateDoc>('example', 'state');
         this.doc.subscribe(this.onRemoteChange);
-        console.log(this.doc);
+        // console.log(this.doc);
+        const x = eval(codestr);
+        console.log(x);
     };
 
-    private onRemoteChange = (ops:any[], source:any):void => {
-        const data = this.doc.getData();
+    private onRemoteChange = (type:string, ops:any[], source:any, data:StateDoc):void => {
         const domNode:Node = this['domNode'];
-        domNode.textContent = data.state.x || 'hello';
-        console.log(data.state);
+        domNode.textContent = data.state.abc || 'hello';
+        // console.log(data.state);
     };
 
     public static create(info:any):Node {
