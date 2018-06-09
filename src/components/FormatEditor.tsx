@@ -5,7 +5,7 @@ import * as classNames from 'classnames';
 import {CodeDoc, DocUIFormat, FormatDoc} from '../../types/docTypes';
 import { CodeEditor } from "./CodeEditor";
 
-require('codemirror/lib/codemirror.css');
+import 'codemirror/lib/codemirror.css';
 
 interface FormatEditorProps {
     format: DocUIFormat,
@@ -29,10 +29,16 @@ export class FormatEditor extends React.Component<FormatEditorProps, FormatEdito
         };
     };
     public render() {
-        return <div>
-            <h1>Edit {this.props.format.name} {this.props.id</h1>
-            <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.id, 'backendCode', 'code']} options={{mode:'text/typescript-jsx'}} />
-            <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.id, 'backendCode', 'code']} options={{mode:'text/typescript-jsx'}} />
+        return <div className="row">
+            {/* <h1>Edit {this.props.format.name} {this.props.id}</h1> */}
+            <div className="col">
+                <h2>Backend</h2>
+                <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.id, 'backendCode', 'code']} options={{mode:'text/typescript-jsx'}} />
+            </div>
+            <div className="col">
+                <h2>Display</h2>
+                <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.id, 'displayCode', 'code']} options={{mode:'text/typescript-jsx'}} />
+            </div>
         </div>
     };
 }

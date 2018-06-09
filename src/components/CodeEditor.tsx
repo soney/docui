@@ -45,7 +45,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.state = {
             isFocused: false
         };
-        this.doc.subscribe(this.onRemoteChange);
+        this.props.doc.subscribe(this.onRemoteChange);
     };
     public componentDidMount():void {
         this.codeMirror = CodeMirror.fromTextArea(this.textareaNode, this.props.options);
@@ -81,7 +81,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         if(this.ops.length > 0) {
             const ops = this.ops;
             this.ops = [];
-            await this.doc.submitOp(ops);
+            await this.props.doc.submitOp(ops);
             this.assertValue();
         }
     };
@@ -127,7 +127,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.suppressChange = false;
     };
     private getSDBCode():string {
-        const docData = this.doc.getData();
+        const docData = this.props.doc.getData();
         let docValue = docData;
         for(let i:number = 0; i<this.props.docPath.length; i++) {
             const k = this.props.docPath[i];

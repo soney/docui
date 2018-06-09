@@ -100,21 +100,52 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         }
     };
 
-    private onButtonClick = ():void => {
-        const range = this.quill.getSelection();
-        if(range) {
-            this.quill.formatText(range.index, range.length, {'docui-inline': {url: 'http://umich.edu/'}}, Quill.sources.USER);
-        }
-    };
-
     private createFormat():void {
         this.formatsDoc.submitListPushOp(['formats'], {
             name: `F${this.formatsDoc.getData().formats.length}`,
             backendCode: {
-                code: 'backend'
+                code:
+`
+import {InlineBlotBackend, InlineBlotInterface} from './InlineBlot';
+
+export default class WidgetBackend implements InlineBlotInterface {
+    private abc:number = 0;
+    public constructor(private backend:InlineBlotBackend) {
+    };
+
+    public onAdded():void {
+        this.interval = setInterval(() => {
+            this.abc++;
+            // console.log(this.abc);
+            this.backend.setState({
+                abc: this.abc
+            });
+        }, 2000);
+    };
+
+    public onRemoved():void {
+        clearInterval(this.interval);
+    };
+
+    public onTextContentChanged():void {
+
+    };
+};
+`
             },
             displayCode: {
-                code: 'frontend'
+                code: 
+`export default class WidgetDisplay {
+    public constructor(private displayBackend) {
+
+    };
+    public render():React.ReactNode {
+        const abc = this.displayBackend.getState('abc');
+        const greeting = 'hello';
+        return <div>{greeting} {abc}</div>;
+    };
+};
+`
             }
         });
     };
@@ -128,11 +159,14 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     };
 
     private applyFormat(format:DocUIFormat):void {
-        console.log('apply', format);
+        const range = this.quill.getSelection();
+        if(range) {
+            this.quill.formatText(range.index, range.length, {'docui-inline': {url: 'http://umich.edu/'}}, Quill.sources.USER);
+        }
     };
 
     public render():React.ReactNode {
-        const editorClassName = classNames(this.props.className);
+        // const editorClassName = classNames(this.props.className);
         const formatsElements:React.ReactNode[] = this.state.formats.map((f:DocUIFormat) =>
             <button onClick={(e)=>this.applyFormat(f)} onContextMenu={(e)=>{e.preventDefault(); this.editFormat(f)}} key={f.name}>{f.name}</button>
         );
@@ -140,8 +174,8 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         if(this.state.editingFormat) {
             editingFormatElement = <FormatEditor id={this.state.formats.indexOf(this.state.editingFormat)} formatsDoc={this.formatsDoc} format={this.state.editingFormat} />;
         }
-        return <div>
-            <div ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">
+        return <div className="container">
+            <div className="row" ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">
                 <select className="ql-size">
                     <option value="small"></option>
                     <option selected></option>
@@ -155,10 +189,9 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
                 {formatsElements}
 
                 <button className="" onClick={(e)=>this.createFormat()}>Create</button>
-                {/* <button className="" onClick={(e)=>this.onButtonClick()} ref={(ref:HTMLButtonElement)=>this.buttonNode = ref}>x</button> */}
             </div>
             {editingFormatElement}
-            <div ref={(ref:HTMLDivElement) => this.editorNode = ref } className={editorClassName} />
+            <div className="row" ref={(ref:HTMLDivElement) => this.editorNode = ref } />
         </div>
     };
 };

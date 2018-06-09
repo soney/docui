@@ -1,5 +1,6 @@
 export interface CodeDoc {
-    code: string
+    code: string,
+    error?:string
 };
 export interface BackendCodeDoc extends CodeDoc { };
 export interface DisplayCodeDoc extends CodeDoc {
@@ -12,6 +13,7 @@ export type StateDoc = {
 
 export interface DocUIFormat {
     name:string,
+    id:number,
     backendCode:BackendCodeDoc,
     displayCode:DisplayCodeDoc
 };
