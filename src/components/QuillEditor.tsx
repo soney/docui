@@ -101,12 +101,13 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
     };
 
     private createFormat():void {
+        const {formats} = this.formatsDoc.getData();
         this.formatsDoc.submitListPushOp(['formats'], {
-            name: `F${this.formatsDoc.getData().formats.length}`,
+            name: `F${formats.length}`,
+            id: formats.length,
             backendCode: {
                 code:
-`
-import {InlineBlotBackend, InlineBlotInterface} from './InlineBlot';
+`import {InlineBlotBackend, InlineBlotInterface} from './InlineBlot';
 
 export default class WidgetBackend implements InlineBlotInterface {
     private abc:number = 0;
@@ -161,7 +162,8 @@ export default class WidgetBackend implements InlineBlotInterface {
     private applyFormat(format:DocUIFormat):void {
         const range = this.quill.getSelection();
         if(range) {
-            this.quill.formatText(range.index, range.length, {'docui-inline': {url: 'http://umich.edu/'}}, Quill.sources.USER);
+            const formatsDoc = this.formatsDoc;
+            this.quill.formatText(range.index, range.length, {'docui-inline': {formatsDoc, format}}, Quill.sources.USER);
         }
     };
 
@@ -172,7 +174,7 @@ export default class WidgetBackend implements InlineBlotInterface {
         );
         let editingFormatElement = null;
         if(this.state.editingFormat) {
-            editingFormatElement = <FormatEditor id={this.state.formats.indexOf(this.state.editingFormat)} formatsDoc={this.formatsDoc} format={this.state.editingFormat} />;
+            editingFormatElement = <FormatEditor formatsDoc={this.formatsDoc} format={this.state.editingFormat} />;
         }
         return <div className="container">
             <div className="row" ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">

@@ -7,28 +7,6 @@ import {has} from 'lodash';
 
 const Inline = Quill.import('blots/inline');
 
-const codestr = `
-"use strict";
-exports.__esModule = true;
-var WidgetDisplay = /** @class */ (function () {
-    function WidgetDisplay(displayBackend) {
-        this.displayBackend = displayBackend;
-    }
-    ;
-    WidgetDisplay.prototype.render = function () {
-        var abc = this.displayBackend.getState('abc');
-        var greeting = 'hello';
-        return React.createElement("span", null,
-            greeting,
-            " ",
-            abc);
-    };
-    ;
-    return WidgetDisplay;
-}());
-exports["default"] = WidgetDisplay;
-; `;
-
 interface DocUIInlineBlotReactComponentProps {
     stateDoc:SDBDoc<StateDoc>
 };
@@ -43,7 +21,7 @@ export class DocUIInlineBlotReactComponent extends React.Component<DocUIInlineBl
         this.props.stateDoc.subscribe(this.onStateChange);
 
         const exports = {};
-        eval(`((exports) => {${codestr}})(exports)`);
+        // eval(`((exports) => {${codestr}})(exports)`);
         this.WidgetDisplayClass = exports['default'];
         this.widgetDisplayInstance = new this.WidgetDisplayClass(this);
     };
@@ -80,6 +58,7 @@ export class DocUIInlineBlot extends Inline {
 
     public static create(info:any):Node {
         const node:Element = super.create(null) as Element;
+        console.log(info);
         return node;
     };
 
