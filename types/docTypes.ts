@@ -13,10 +13,20 @@ export type StateDoc = {
 
 export interface DocUIFormat {
     name:string,
-    id:number,
+    formatId:string,
     backendCode:BackendCodeDoc,
-    displayCode:DisplayCodeDoc
+    displayCode:DisplayCodeDoc,
+    blots: {
+        [blotId:string]: {
+            blotId:string,
+            state: {
+                [key:string]: any
+            }
+        }
+    }
 };
 export interface FormatDoc {
-    formats: DocUIFormat[]
+    formats: {
+        [formatId:string]:DocUIFormat
+    }
 };

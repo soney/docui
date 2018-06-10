@@ -5,7 +5,7 @@ import {SDBClient, SDBDoc} from 'sdb-ts';
 import {QuillDoc, FormatDoc, DocUIFormat} from '../../types/docTypes';
 import * as richText from 'rich-text';
 import {DocUIInlineBlot} from '../blots/DocUIInlineBlot';
-import {merge} from 'lodash';
+import {merge, size, map} from 'lodash';
 import {FormatEditor} from './FormatEditor';
 
 SDBClient.registerType(richText.type);
@@ -28,7 +28,7 @@ interface QuillEditorProps {
 };
 interface QuillEditorState {
     isFocused: boolean,
-    formats:DocUIFormat[],
+    formats:{[formatId:string]: DocUIFormat},
     editingFormat:DocUIFormat
 };
 
@@ -61,11 +61,12 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
         super(props, state);
         this.state = {
             isFocused: false,
-            formats: [],
+            formats: {},
             editingFormat: null
         };
         this.doc.subscribe(this.onRemoteChange);
         this.formatsDoc.subscribe(this.onFormatsChange);
+        DocUIInlineBlot.setFormatsDoc(this.formatsDoc);
     };
 
     private onFormatsChange = (type:string, ops:any[], source:any):void => {
@@ -102,9 +103,11 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
 
     private createFormat():void {
         const {formats} = this.formatsDoc.getData();
-        this.formatsDoc.submitListPushOp(['formats'], {
-            name: `F${formats.length}`,
-            id: formats.length,
+        const formatsSize = size(formats);
+        const formatId = `F-${formatsSize}`;
+        this.formatsDoc.submitObjectInsertOp(['formats', formatId], {
+            formatId,
+            name: `F${formatsSize}`,
             backendCode: {
                 code:
 `import {InlineBlotBackend, InlineBlotInterface} from './InlineBlot';
@@ -147,7 +150,8 @@ export default class WidgetBackend implements InlineBlotInterface {
     };
 };
 `
-            }
+            },
+            blots: {}
         });
     };
     private editFormat(format:DocUIFormat):void {
@@ -162,14 +166,15 @@ export default class WidgetBackend implements InlineBlotInterface {
     private applyFormat(format:DocUIFormat):void {
         const range = this.quill.getSelection();
         if(range) {
-            const formatsDoc = this.formatsDoc;
-            this.quill.formatText(range.index, range.length, {'docui-inline': {formatsDoc, format}}, Quill.sources.USER);
+            const {formatId} = format;
+            const blotId = size(format.blots);
+            this.quill.formatText(range.index, range.length, {'docui-inline': { formatId, blotId }}, Quill.sources.USER);
         }
     };
 
     public render():React.ReactNode {
         // const editorClassName = classNames(this.props.className);
-        const formatsElements:React.ReactNode[] = this.state.formats.map((f:DocUIFormat) =>
+        const formatsElements:React.ReactNode[] = map(this.state.formats, (f:DocUIFormat) =>
             <button onClick={(e)=>this.applyFormat(f)} onContextMenu={(e)=>{e.preventDefault(); this.editFormat(f)}} key={f.name}>{f.name}</button>
         );
         let editingFormatElement = null;

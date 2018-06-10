@@ -14,8 +14,8 @@ interface CodeEditorProps {
     mode?: string,
     options?: any,
     docPath:Array<string|number>,
+    errorPath:Array<string|number>,
     doc:SDBDoc<any>
-    // doc: [string, string]
 };
 interface CodeEditorState {
     isFocused: boolean
@@ -34,6 +34,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         className: '',
         autoFocus: false,
         docPath: [],
+        errorPath: [],
         options: {},
         doc:null
         // doc: ['example', 'code']
