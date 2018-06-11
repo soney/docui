@@ -80,7 +80,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
             if(ops) {
                 this.quill.updateContents(ops);
             } else {
-                this.quill.setContents(this.doc.getData());
+                this.updateQuillDocumentContents();
             }
         }
     };
@@ -95,8 +95,13 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
             if (source !== 'user') { return; }
             this.doc.submitOp(delta, this.quill);
         });
+        this.updateQuillDocumentContents();
+    };
+
+    private async updateQuillDocumentContents():Promise<void> {
         const data = this.doc.getData();
         if(data) {
+            await this.formatsDoc.fetch();
             this.quill.setContents(data);
         }
     };
@@ -146,7 +151,7 @@ export default class WidgetBackend implements InlineBlotInterface {
     public render():React.ReactNode {
         const abc = this.displayBackend.getState('abc');
         const greeting = 'hello';
-        return <div>{greeting} {abc}</div>;
+        return <span>{greeting} {abc}</span>;
     };
 };
 `
@@ -167,7 +172,7 @@ export default class WidgetBackend implements InlineBlotInterface {
         const range = this.quill.getSelection();
         if(range) {
             const {formatId} = format;
-            const blotId = size(format.blots);
+            const blotId = `${formatId},B-${size(format.blots)}`;
             this.quill.formatText(range.index, range.length, {'docui-inline': { formatId, blotId }}, Quill.sources.USER);
         }
     };
