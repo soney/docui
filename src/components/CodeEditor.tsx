@@ -3,6 +3,7 @@ import {SDBClient, SDBDoc} from 'sdb-ts';
 import * as CodeMirror from 'codemirror';
 import * as classNames from 'classnames';
 import {FormatDoc, CodeDoc} from '../../types/docTypes';
+import {isEqual} from 'lodash';
 
 require('codemirror/lib/codemirror.css');
 
@@ -18,7 +19,8 @@ interface CodeEditorProps {
     doc:SDBDoc<any>
 };
 interface CodeEditorState {
-    isFocused: boolean
+    isFocused: boolean,
+    errorDescription:string
 };
 
 export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState> {
@@ -44,7 +46,8 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         // const [n, d] = this.props.doc;
         // this.doc = this.client.get<CodeDoc>(n, d);
         this.state = {
-            isFocused: false
+            isFocused: false,
+            errorDescription: null
         };
         this.props.doc.subscribe(this.onRemoteChange);
     };
@@ -86,40 +89,29 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
             this.assertValue();
         }
     };
-    private static arrEq(a:any[], b:any[]):boolean {
-        if(a.length === b.length) {
-            for(let i = 0; i<a.length; i++) {
-                if(a[i] !== b[i]) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
     private onRemoteChange = (type:string, ops:any[], source:boolean):void => {
         if(source) { return; }
         this.suppressChange = true;
         if(ops) {
-            ops.forEach((part) => {
-                if (!(part.p && CodeEditor.arrEq(part.p.slice(0, this.props.docPath.length), this.props.docPath) && (part.si||part.sd))) {
-                    console.log('ShareDBCodeMirror: ignoring op because of path or type:', part);
-                    return;
-                }
+            const {docPath, errorPath} = this.props;
+            ops.forEach((op) => {
+                const {p} = op;
 
-                const op = part.o;
-                const doc = this.codeMirror.getDoc();
-                const {si, sd} = part;
+                if (p && isEqual(op.p.slice(0, docPath.length), docPath) && (op.si||op.sd)) {
+                    const doc = this.codeMirror.getDoc();
+                    const {si, sd} = op;
 
-                const index = part.p[part.p.length-1];
-                const from = doc.posFromIndex(index);
+                    const index = op.p[op.p.length-1];
+                    const from = doc.posFromIndex(index);
 
-                if(sd) {
-                    const to = doc.posFromIndex(index+sd.length);
-                    doc.replaceRange('', from, to);
-                } else if(si) {
-                    doc.replaceRange(si, from);
+                    if(sd) {
+                        const to = doc.posFromIndex(index+sd.length);
+                        doc.replaceRange('', from, to);
+                    } else if(si) {
+                        doc.replaceRange(si, from);
+                    }
+                } else if(p && isEqual(p.slice(0, errorPath.length), errorPath)) {
+                    this.updateError;
                 }
             });
         } else {
@@ -128,13 +120,14 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         this.suppressChange = false;
     };
     private getSDBCode():string {
-        const docData = this.props.doc.getData();
-        let docValue = docData;
-        for(let i:number = 0; i<this.props.docPath.length; i++) {
-            const k = this.props.docPath[i];
-            docValue = docValue[k];
-        }
-        return docValue;
+        return this.props.doc.traverse(this.props.docPath);
+    };
+    private getErrorDescription():string {
+        return this.props.doc.traverse(this.props.errorPath);
+    };
+    private updateError():void {
+        const errorDescription = this.getErrorDescription();
+        this.setState({errorDescription});
     };
     private assertValue():void {
         const docValue = this.getSDBCode();
@@ -149,6 +142,10 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
     };
     public render():React.ReactNode {
         const editorClassName = classNames('CodeMirror', this.state.isFocused ? 'ReactCodeMirror--focused' : null, this.props.className);
+
+        const errorElement = this.state.errorDescription ?
+            <div>{this.state.errorDescription}</div> :
+            null;
         return <div className={editorClassName}>
             <textarea
                 ref={(ref:HTMLTextAreaElement) => this.textareaNode = ref}
@@ -157,6 +154,7 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
                 autoComplete="off"
                 autoFocus={this.props.autoFocus}
             />
+            {errorElement}
         </div>
     };
 };

@@ -32,7 +32,7 @@ export class FormatEditor extends React.Component<FormatEditorProps, FormatEdito
             {/* <h1>Edit {this.props.format.name} {this.props.id}</h1> */}
             <div className="col">
                 <h2>Backend</h2>
-                <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.format.formatId, 'backendCode', 'code']} errorPath={['formats', this.props.format.formatId, 'displayCode', 'error']} options={{mode:'text/typescript-jsx'}} />
+                <CodeEditor doc={this.props.formatsDoc} docPath={['formats', this.props.format.formatId, 'backendCode', 'code']} errorPath={['formats', this.props.format.formatId, 'backendCode', 'error']} options={{mode:'text/typescript-jsx'}} />
             </div>
             <div className="col">
                 <h2>Display</h2>
