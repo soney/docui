@@ -136,8 +136,9 @@ export default class WidgetBackend implements InlineBlotInterface {
         clearInterval(this.interval);
     };
 
-    public onTextContentChanged():void {
-
+    public onTextContentChanged(value:string):void {
+        console.log('text content', value);
+        console.log(this.backend.getTextContent());
     };
 };
 `

@@ -14,7 +14,7 @@ interface DocUIInlineBlotReactComponentProps {
     formatId:string,
     blotId:string
 };
-interface DocUIInlineBlotReactComponentState {[key:string]:any};
+interface DocUIInlineBlotReactComponentState {[key:string]:any, textContent:string};
 
 export class DocUIInlineBlotReactComponent extends React.Component<DocUIInlineBlotReactComponentProps, DocUIInlineBlotReactComponentState> {
     private WidgetDisplayClass:any;
@@ -24,30 +24,59 @@ export class DocUIInlineBlotReactComponent extends React.Component<DocUIInlineBl
         this.props.formatsDoc.subscribe(this.onFormatsDocChange);
     };
 
+    private formatPath():Array<string|number> {
+        return ['formats', this.props.formatId];
+    };
+    private blotPath():Array<string|number> {
+        return this.formatPath().concat('blots', this.props.blotId);
+    };
+    private setBlotError(e:string):void {
+        const errorPath = this.blotPath().concat('error');
+        const { formatsDoc } = this.props;
+
+        formatsDoc.submitObjectReplaceOp(errorPath, e);
+    };
+
+    public onTextContentChange(value:string):void {
+        const textContentPath = this.blotPath().concat('textContent');
+        const { formatsDoc } = this.props;
+        formatsDoc.submitObjectReplaceOp(textContentPath, value);
+    };
+
+
     private onFormatsDocChange = (type:string, ops, source, data:FormatDoc):void => {
         if(type == null) {
             this.updateWidgetDisplayClass();
         } else if(type === 'op') {
+            const { formatsDoc } = this.props;
+            const jsCodePath = this.formatPath().concat("displayCode", "jsCode");
+            const statePath = this.blotPath().concat('state');
+
             forEach(ops, (op) => {
                 const {p} = op;
-                if(isEqual(p.slice(0, 4), ["formats", this.props.formatId, "displayCode", "jsCode"])) {
+                if(isEqual(p.slice(0, 4), jsCodePath)) {
                     this.updateWidgetDisplayClass();
-                } else if(p.length === 6 && isEqual(p.slice(0, 5), ['formats', this.props.formatId, 'blots', this.props.blotId, 'state'])) {
-                    const formats = this.props.formatsDoc.getData();
-                    const blot = formats.formats[this.props.formatId].blots[this.props.blotId];
-                    const {state} = blot;
+                } else if(p.length === 6 && isEqual(p.slice(0, 5), statePath)) {
+                    const state = formatsDoc.traverse(statePath);
                     this.setState(state);
                 }
             });
         }
     };
     private updateWidgetDisplayClass():void {
-        const format = this.props.formatsDoc.getData().formats[this.props.formatId];
-        const {jsCode} = format.displayCode;
+        const { formatsDoc } = this.props;
+        const displayCodePath = this.formatPath().concat("displayCode");
+
+        const jsCode = formatsDoc.traverse(displayCodePath.concat("jsCode"));
         if(jsCode) {
-            const exports = {};
-            eval(`((exports) => {${jsCode}})(exports)`);
-            this.WidgetDisplayClass = exports['default'];
+            try {
+                const exports = {};
+                eval(`((exports) => {${jsCode}})(exports)`);
+                this.WidgetDisplayClass = exports['default'];
+            } catch(e) {
+                formatsDoc.submitObjectReplaceOp(displayCodePath.concat('error'), `${e}`);
+            }
+
             this.updateWidgetDisplayInstance();
         } else {
             this.WidgetDisplayClass = null;
@@ -57,12 +86,20 @@ export class DocUIInlineBlotReactComponent extends React.Component<DocUIInlineBl
     private updateWidgetDisplayInstance():void {
         if(this.widgetDisplayInstance) {
             if(this.widgetDisplayInstance.destroy) {
-                this.widgetDisplayInstance.destroy();
+                try {
+                    this.widgetDisplayInstance.destroy();
+                } catch(e) {
+                    this.setBlotError(`${e}`);
+                }
             }
         }
 
         if(this.WidgetDisplayClass) {
-            this.widgetDisplayInstance = new this.WidgetDisplayClass(this);
+            try {
+                this.widgetDisplayInstance = new this.WidgetDisplayClass(this);
+            } catch(e) {
+                this.setBlotError(`${e}`);
+            }
             this.forceUpdate();
         }
     };
@@ -81,7 +118,16 @@ export class DocUIInlineBlotReactComponent extends React.Component<DocUIInlineBl
 
     public render():React.ReactNode {
         if(this.widgetDisplayInstance) {
-            return this.widgetDisplayInstance.render();
+            try {
+                const result = this.widgetDisplayInstance.render();
+                if(!result) {
+                    throw new Error('Nothing returned from render');
+                }
+                return result;
+            } catch(e) {
+                this.setBlotError(`${e}`);
+                return <span style={{color:'red'}}>(error)</span>
+            }
         } else {
             return <span style={{color:'red'}}>...</span>
         }
@@ -98,13 +144,20 @@ export class DocUIInlineBlot extends Inline {
     private blotContent:HTMLSpanElement;
     private formatId:string;
     private blotId:string;
+    private textContent:string;
+    private blotReactComponent:DocUIInlineBlotReactComponent;
     protected domNode:HTMLSpanElement;
 
     constructor(domNode:HTMLSpanElement, value?:{formatId:string, blotId:string}) {
         super(domNode, value);
         this.formatId = value.formatId;
         this.blotId = value.blotId;
+        domNode.setAttribute('style', 'color: orange');
         this.attachBlotWidget();
+        this.updateTextContent();
+        setInterval(() => {
+            this.updateTextContent();
+        }, 200);
     };
 
     public static setFormatsDoc(doc:SDBDoc<FormatDoc>):void {
@@ -131,11 +184,42 @@ export class DocUIInlineBlot extends Inline {
             });
         }
 
-        ReactDOM.render(<DocUIInlineBlotReactComponent formatsDoc={DocUIInlineBlot.formatsDoc} formatId={this.formatId} blotId={this.blotId} />, this.blotContent);
+        this.blotReactComponent = ReactDOM.render(<DocUIInlineBlotReactComponent formatsDoc={DocUIInlineBlot.formatsDoc} formatId={this.formatId} blotId={this.blotId} />, this.blotContent) as DocUIInlineBlotReactComponent;
+    };
+
+    public getTextContent():string {
+        this.updateTextContent();
+        return this.textContent;
+    };
+
+    private updateTextContent():void {
+        const oldTextContent = this.textContent;
+        const newTextContent = this.getLeafContents();
+
+        if(oldTextContent !== newTextContent) {
+            if(this.blotReactComponent) {
+                this.blotReactComponent.onTextContentChange(newTextContent);
+            }
+        }
+
+        this.textContent = newTextContent;
+    };
+
+    private getLeafContents():string {
+        const children:Quill.LinkedList = this['children'];
+        let child:Quill.Blot = children.head;
+        let value:string = '';
+        while(child) {
+            if(child.value) {
+                value += child.value();
+            }
+            child = child.next;
+        }
+        return value;
     };
 
     public static create(info:any):Node {
-        return super.create(null);
+        return super.create();
     };
 
     public static formats(domNode:HTMLSpanElement):{formatId:string, blotId:string} {

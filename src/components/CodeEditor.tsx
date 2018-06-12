@@ -111,11 +111,12 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
                         doc.replaceRange(si, from);
                     }
                 } else if(p && isEqual(p.slice(0, errorPath.length), errorPath)) {
-                    this.updateError;
+                    this.updateError();
                 }
             });
         } else {
             this.codeMirror.getDoc().setValue(this.getSDBCode());
+            this.updateError();
         }
         this.suppressChange = false;
     };
@@ -141,12 +142,12 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
         }
     };
     public render():React.ReactNode {
-        const editorClassName = classNames('CodeMirror', this.state.isFocused ? 'ReactCodeMirror--focused' : null, this.props.className);
+        // const editorClassName = classNames('CodeMirror', this.state.isFocused ? 'ReactCodeMirror--focused' : null, this.props.className);
 
         const errorElement = this.state.errorDescription ?
-            <div>{this.state.errorDescription}</div> :
+            <p className="text-danger">{this.state.errorDescription}</p> :
             null;
-        return <div className={editorClassName}>
+        return <div>
             <textarea
                 ref={(ref:HTMLTextAreaElement) => this.textareaNode = ref}
                 name={this.props.name}

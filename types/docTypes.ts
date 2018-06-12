@@ -19,6 +19,8 @@ export interface DocUIFormat {
     blots: {
         [blotId:string]: {
             blotId:string,
+            error:string,
+            textContent:string,
             state: {
                 [key:string]: any
             }
