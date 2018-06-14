@@ -115,7 +115,7 @@ export class QuillEditor extends React.Component<QuillEditorProps, QuillEditorSt
             name: `F${formatsSize}`,
             backendCode: {
                 code:
-`import {InlineBlotBackend, InlineBlotInterface} from './InlineBlot';
+`import {InlineBlotBackend, InlineBlotInterface} from './backend_utilities/InlineBlot';
 
 export default class WidgetBackend implements InlineBlotInterface {
     private abc:number = 0;
