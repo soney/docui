@@ -184,7 +184,10 @@ export class DocUIInlineBlot extends Inline {
             });
         }
 
-        this.blotReactComponent = ReactDOM.render(<DocUIInlineBlotReactComponent formatsDoc={DocUIInlineBlot.formatsDoc} formatId={this.formatId} blotId={this.blotId} />, this.blotContent) as DocUIInlineBlotReactComponent;
+        ReactDOM.render(<DocUIInlineBlotReactComponent formatsDoc={DocUIInlineBlot.formatsDoc} formatId={this.formatId} blotId={this.blotId} />, this.blotContent, () => {
+            console.log(arguments);
+            // this.blotReactComponent = thi
+        });
     };
 
     public getTextContent():string {
