@@ -189,9 +189,9 @@ export default class WidgetBackend implements InlineBlotInterface {
         }
         return <div className="container">
             <div className="row" ref={(ref:HTMLDivElement) => this.toolbarNode = ref } id="toolbar">
-                <select className="ql-size">
+                <select defaultValue={'normal'} className="ql-size">
                     <option value="small"></option>
-                    <option selected></option>
+                    <option value="normal"></option>
                     <option value="large"></option>
                     <option value="huge"></option>
                 </select>

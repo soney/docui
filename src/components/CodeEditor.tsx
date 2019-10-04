@@ -49,13 +49,14 @@ export class CodeEditor extends React.Component<CodeEditorProps, CodeEditorState
             isFocused: false,
             errorDescription: null
         };
-        this.props.doc.subscribe(this.onRemoteChange);
     };
     public componentDidMount():void {
         this.codeMirror = CodeMirror.fromTextArea(this.textareaNode, this.props.options);
         this.codeMirror.setValue(this.props.value);
         this.codeMirror.on('beforeChange', this.beforeLocalChange);
         this.codeMirror.on('changes', this.afterLocalChanges);
+
+        this.props.doc.subscribe(this.onRemoteChange);
     };
     private beforeLocalChange = async (editor:CodeMirror.Editor, change:CodeMirror.EditorChange):Promise<void> => {
         if(this.suppressChange) { return; }
